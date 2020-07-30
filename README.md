@@ -1,6 +1,26 @@
 # clustercheck
 This plugin is designed to mimic the function of the Percona clustercheck script for PXC.
 
+### Server Setup
+
+    sudo yum install wget
+    wget https://www.percona.com/downloads/Percona-XtraDB-Cluster-LATEST/Percona-XtraDB-Cluster-8.0.19-10.1/source/tarball/Percona-XtraDB-Cluster-8.0.19-10.tar.gz
+    tar -zxvf Percona-XtraDB-Cluster-8.0.19-10.tar.gz
+    cd Percona-XtraDB-Cluster-8.0.19-10
+    sudo yum install git
+    sudo yum install gcc
+    sudo yum install gcc-c++
+    sudo yum install make
+    sudo yum install cmake
+    sudo yum install boost
+    sudo yum install ncurses-devel
+    sudo yum install readline-devel
+    sudo yum install openssl-devel
+    sudo yum install libtirpc-devel
+    sudo yum install curl-devel
+    sudo rpm -i http://mirror.centos.org/centos/8/PowerTools/x86_64/os/Packages/rpcgen-1.3.1-4.el8.x86_64.rpm
+    cmake -DDOWNLOAD_BOOST=1 -DFORCE_INSOURCE_BUILD=1 -DWITH_BOOST=..
+
 The plugin introduces some new Status Variables to MySQL for controlling behavior:
 
     mysql> SHOW GLOBAL VARIABLES LIKE "cluster%";
