@@ -1,4 +1,4 @@
 MYSQL_ADD_PLUGIN(clustercheck src/clustercheck.cc
-  MODULE_ONLY MODULE_OUTPUT_NAME "clustercheck")
-
+  MODULE_ONLY)
+  
 ADD_DEFINITIONS(-DMYSQL_SERVER)
