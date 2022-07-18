@@ -3,6 +3,8 @@ This plugin is designed to mimic the function of the Percona clustercheck script
 
 ### Server Setup
 
+The following was used to setup a t2.medium instance running Amazon Linux on an AWS EC2 instance:
+
     sudo yum -y install git
     sudo yum -y install gcc
     sudo yum -y install gcc-c++
@@ -56,8 +58,11 @@ This plugin is designed to mimic the function of the Percona clustercheck script
     sudo /usr/local/mysql/bin/mysqld &
     sudo /usr/local/mysql/bin/mysql_secure_installation
 
-    # Setup and compile the clustercheck plugin
-    cd plugin
+### Compile the plugin
+
+You will want to have the source code compiled for PXC and have the MySQL daemon up and running before you attempt to compile the plugin.  Once that is done, you will want to go into the source directory for PXC and clone the repo.  You can then compile the plugin by a simple "make clustercheck" command in the base directory.  After that, you will need to run the "INSTALL PLUGIN" command.
+
+    cd Percona-XtraDB-Cluster-8.0.27-18/plugin
     sudo git clone https://github.com/michaelspatrick/clustercheck.git
     sudo chown ec2-user:ec2-user clustercheck -R
     cd ..
