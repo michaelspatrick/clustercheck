@@ -58,7 +58,7 @@ The following was used to setup a t2.medium instance running Amazon Linux on an 
     sudo /usr/local/mysql/bin/mysqld &
     sudo /usr/local/mysql/bin/mysql_secure_installation
 
-### Compile the plugin
+### Compile the Plugin
 
 You will want to have the source code compiled for PXC and have the MySQL daemon up and running before you attempt to compile the plugin.  Once that is done, you will want to go into the source directory for PXC and clone the repo.  You can then compile the plugin by a simple "make clustercheck" command in the base directory.  After that, you will need to run the "INSTALL PLUGIN" command.
 
@@ -69,10 +69,10 @@ You will want to have the source code compiled for PXC and have the MySQL daemon
     cmake .
     make clustercheck
 
-### Install the plugin
+### Install the Plugin
     mysql> INSTALL PLUGIN clustercheck SONAME 'clustercheck.so';
     
-### Uninstall the plugin
+### Uninstall the Plugin
     mysql> UNINSTALL PLUGIN clustercheck;
     
 ### Plugin Status Variables
