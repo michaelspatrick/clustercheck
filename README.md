@@ -1,5 +1,5 @@
 # clustercheck
-This plugin is designed to mimic the function of the Percona clustercheck script for PXC.
+This plugin is designed to mimic the function of the Percona clustercheck script for PXC. This plugin is still in development and not completed.
 
 ### Server Setup
 
