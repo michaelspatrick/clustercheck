@@ -56,8 +56,13 @@ The following was used to setup a t2.medium instance running Amazon Linux on an 
     # Start MySQL
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/lib64
     sudo /usr/local/mysql/bin/mysqld --initialize
-    sudo /usr/local/mysql/bin/mysqld &
-    sudo /usr/local/mysql/bin/mysql_secure_installation
+    sudo chown ec2-user:ec2-user /var/lib/mysql -R
+    /usr/local/mysql/bin/mysqld &
+    
+    # Connect to MySQL and reset password
+    /usr/local/mysql/bin/mysql -uroot -p -h127.0.0.1
+    mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY '##MySQL123##';
+    mysql> FLUSH PRIVILEGES;
 
 ### Compile the Plugin
 
