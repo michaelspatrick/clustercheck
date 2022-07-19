@@ -18,14 +18,20 @@
 #include <typelib.h>
 #include <mysql_com.h>
 
-extern bool read_only;
+#include <sql/wsrep_mysqld.h>
 
+// Variables from the daemon
+extern bool read_only;
+extern const char *wsrep_cluster_status;
+extern long wsrep_local_index;
+
+// Local variables
 long enabled = 1;
 long available_if_donor = 0;
 long available_if_readonly = 0;
 static MYSQL_SYSVAR_LONG(available_if_readonly, available_if_readonly, 0, "Availability of node if it is readonly", NULL, NULL, 0, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(available_if_donor, available_if_donor, 0, "Availability of node if it is a donor", NULL, NULL, 0, 0, 1, 0);
-static MYSQL_SYSVAR_LONG(enabled, enabled, 1, "Whether cluster check is enabled", NULL, NULL, 0, 0, 1, 0);
+static MYSQL_SYSVAR_LONG(enabled, enabled, 0, "Whether cluster check is enabled", NULL, NULL, 0, 0, 1, 0);
 static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(enabled), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), nullptr};
 
 void *listener(void *) {
@@ -46,45 +52,30 @@ void *listener(void *) {
   while(1) {
     connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 
-    if (enabled != 1) {
-      // disabled
-      strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
-      strcat(sendBuff, "Content-Type: text/plain\r\n");
-      strcat(sendBuff, "Connection: close\r\n");
-      strcat(sendBuff, "Content-Length: 51\r\n");
-      strcat(sendBuff, "\r\n");
-      strcat(sendBuff, "Percona XtraDB Cluster Node is manually disabled.\r\n");
-      [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
-
-      close(connfd);
-
-    //} else if (wsrep_local_state == "4" || ((wsrep_local_state == "2") && (available_if_donor == 1))) {
-    } else if (available_if_donor == 1) {
-      if (available_if_readonly == 1) {
-
-        if (read_only) {
-          // in read-only state
-          strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
-          strcat(sendBuff, "Content-Type: text/plain\r\n");
-          strcat(sendBuff, "Connection: close\r\n");
-          strcat(sendBuff, "Content-Length: 43\r\n");
-          strcat(sendBuff, "\r\n");
-          strcat(sendBuff, "Percona XtraDB Cluster Node is read-only.\r\n");
-          [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
-          close(connfd);
-        } else {
-          // success
-          strcpy(sendBuff, "HTTP/1.1 200 OK\r\n");
-          strcat(sendBuff, "Content-Type: text/plain\r\n");
-          strcat(sendBuff, "Connection: close\r\n");
-          strcat(sendBuff, "Content-Length: 40\r\n");
-          strcat(sendBuff, "\r\n");
-          strcat(sendBuff, "Percona XtraDB Cluster Node is synced.\r\n");
-          [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
-          close(connfd);
+    if ((strcmp(wsrep_cluster_status, "Primary") == 0) && (wsrep_node_is_synced() || (wsrep_node_is_donor() && available_if_donor == 1))) {
+      if (enabled != 1) { // check is disabled
+        strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
+        strcat(sendBuff, "Content-Type: text/plain\r\n");
+        strcat(sendBuff, "Connection: close\r\n");
+        strcat(sendBuff, "Content-Length: 51\r\n");
+        strcat(sendBuff, "\r\n");
+        strcat(sendBuff, "Percona XtraDB Cluster Node is manually disabled.\r\n");
+        [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
+        close(connfd);
+      } else {  // check is enabled
+        if (available_if_readonly == 0) {
+          if (read_only) {  // in read-only state
+            strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
+            strcat(sendBuff, "Content-Type: text/plain\r\n");
+            strcat(sendBuff, "Connection: close\r\n");
+            strcat(sendBuff, "Content-Length: 43\r\n");
+            strcat(sendBuff, "\r\n");
+            strcat(sendBuff, "Percona XtraDB Cluster Node is read-only.\r\n");
+            [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
+            close(connfd);
+          }
         }
-      } else {
-        // success
+        // must be a success if we made it here
         strcpy(sendBuff, "HTTP/1.1 200 OK\r\n");
         strcat(sendBuff, "Content-Type: text/plain\r\n");
         strcat(sendBuff, "Connection: close\r\n");
@@ -94,14 +85,13 @@ void *listener(void *) {
         [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
         close(connfd);
       }
-    } else {
-      // not synced
+    } else {  // node is non-primary or not synced
       strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
       strcat(sendBuff, "Content-Type: text/plain\r\n");
       strcat(sendBuff, "Connection: close\r\n");
-      strcat(sendBuff, "Content-Length: 44\r\n");
+      strcat(sendBuff, "Content-Length: 57\r\n");
       strcat(sendBuff, "\r\n");
-      strcat(sendBuff, "Percona XtraDB Cluster Node is not synced.\r\n");
+      strcat(sendBuff, "Percona XtraDB Cluster Node is not synced or non-PRIM.\r\n");
       [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
       close(connfd);
     }
