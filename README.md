@@ -110,8 +110,6 @@ The plugin will listen to port 9200 and will send back a header code and status 
     Connection closed by foreign host.
     
 ### Future Enhancements
-Need to finish up the code by making it look at the wsrep_local_state variable.  I am testing on a regular MySQL installation and need to setup a PXC installation.  
-
-Also, need to make the port upon which it listens configurable.
-
-Finally, make sure that the new variables are available via the MySQL config file.
+* Finish up the code by making it look at the wsrep_local_state variable
+* Make the port upon which it listens configurable
+* Make sure that the global variables are available via the MySQL config file
