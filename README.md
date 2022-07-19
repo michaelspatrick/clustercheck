@@ -1,9 +1,9 @@
 # clustercheck
 This plugin is designed to mimic the function of the Percona clustercheck script for PXC. This plugin is still in development and not completed.
 
-### Server Setup
+### Development Server Setup
 
-The following was used to setup a t2.medium instance running Amazon Linux on an AWS EC2 instance:
+The following was used to setup a t2.medium instance running Amazon Linux on an AWS EC2 instance for development and compilation of the plugin:
 
     sudo yum -y install git
     sudo yum -y install gcc
