@@ -89,7 +89,7 @@ The plugin introduces some new Status Variables to MySQL for controlling behavio
     +------------------------------------+-------+
     3 rows in set (0.00 sec)
     
-It will also read the status variable "read_only" to determine whether the node is in Read Only mode.  You can controll the behavior of whether or not the system should tell the proxy whether the node is available to take traffic or not by setting the variable, "clustercheck_available_if_readonly".  It can be set with the following:
+It will also read the status variable "read_only" to determine whether the node is in Read Only mode.  You can control the behavior of whether or not the system should tell the proxy if the node is available to take traffic or not by setting the variable, "clustercheck_available_if_readonly".  It can be set with the following:
 
     SET GLOBAL clustercheck_available_if_readonly=1;
     
