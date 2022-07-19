@@ -54,6 +54,7 @@ The following was used to setup a t2.medium instance running Amazon Linux on an 
     sudo make install
 
     # Start MySQL
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/lib64
     sudo /usr/local/mysql/bin/mysqld --initialize
     sudo /usr/local/mysql/bin/mysqld &
     sudo /usr/local/mysql/bin/mysql_secure_installation
