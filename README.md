@@ -19,7 +19,6 @@ The following was used to setup a t2.medium instance running Amazon Linux on an 
     sudo yum -y install rpcgen
     sudo yum -y remove cmake
     sudo yum -y install gcc-c++
-    sudo yum -y remove cyrus-sasl
     sudo yum -y install cyrus-sasl cyrus-sasl-devel
     sudo yum -y install openldap-devel
     sudo yum -y install telnet
