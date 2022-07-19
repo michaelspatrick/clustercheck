@@ -30,7 +30,7 @@ long available_if_donor = 0;
 long available_if_readonly = 0;
 static MYSQL_SYSVAR_LONG(available_if_readonly, available_if_readonly, 0, "Availability of node if it is readonly", NULL, NULL, 0, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(available_if_donor, available_if_donor, 0, "Availability of node if it is a donor", NULL, NULL, 0, 0, 1, 0);
-static MYSQL_SYSVAR_LONG(enabled, enabled, 0, "Whether cluster check is enabled", NULL, NULL, 0, 0, 1, 0);
+static MYSQL_SYSVAR_LONG(enabled, enabled, 0, "Whether cluster check is enabled", NULL, NULL, 1, 0, 1, 0);
 static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(enabled), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), nullptr};
 
 void *listener(void *) {
