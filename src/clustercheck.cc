@@ -23,7 +23,6 @@
 // Variables from the daemon
 extern bool read_only;
 extern const char *wsrep_cluster_status;
-extern long wsrep_local_index;
 
 // Local variables
 long enabled = 1;
