@@ -22,6 +22,7 @@ The following was used to setup a t2.medium instance running Amazon Linux on an 
     sudo yum -y remove cyrus-sasl
     sudo yum -y install cyrus-sasl cyrus-sasl-devel
     sudo yum -y install openldap-devel
+    sudo yum -y install telnet
 
     sudo wget https://cmake.org/files/v3.5/cmake-3.5.2.tar.gz
     sudo tar -xvzf cmake-3.5.2.tar.gz
