@@ -155,3 +155,4 @@ There are a few things I would like to do to make the plugin more useful if ther
 * Add a test to ensure the Galera plugin is enabled
 * Make the port upon which it listens configurable
 * Make sure that the global variables are available to set via the MySQL config file
+* Plan to do a version in the near future for Group Replication
