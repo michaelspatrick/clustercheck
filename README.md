@@ -17,7 +17,7 @@ Advantages of the plugin method:
 * Easy to install and configure.
 * No need for root privileges to configure.
 * No need for knowledge of xinetd or services.
-* No need to configure access or store login informaiton in a text file.  The plugin runs internal to the MySQL daemon.
+* No need to configure access or store login information in a text file.  The plugin runs internal to the MySQL daemon.
 * Plugin uses system calls and variables instead of performing SQL queries.
 * Ability to enter maintenance mode via a simple SQL command.
 
