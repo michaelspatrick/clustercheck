@@ -5,7 +5,7 @@ This plugin is designed to mimic the function of the Percona clustercheck script
 The MySQL server daemon plugin initiates a listener on port 9200 which awaits a connection.  Once one is made, the node's availability is checked with the same logic as is used in scripts commonly used.  Instead of querying the database, however, the plugin utilizes internal system calls to verify availability.  An HTTP header, status code, and message are then output and the connection is closed. This mimics the functionality of the scripts currently used for this purpose.
 
 ### Why the need for a clustercheck plugin?
-In order to use a load balancer with PXC, such as HAProxy, you want to be able to query the server easily to see if the node is available to respond to traffic.  Most of the time this requires configuring a script, usually written in Bash or Python, to login to MySQL and check a few status variables and then respond with a HTTP header, status code, and text.  The load balancer then reads this response and uses it to determine whether to route queries to the node or not.
+In order to use a load balancer with PXC, such as HAProxy, you want to be able to query the server easily to see if the node is available to respond to traffic.  Most of the time this requires configuring a script, usually written in Bash or Python, to login to MySQL and check a few status variables and then respond with a HTTP header, status code, and text.  The load balancer then reads this response and uses it to determine whether to route queries to the node or not.  There is also a maintenance mode capability that is simple to enable.
 
 While this approach works fine, it does offer a few disadvantages:
 * Must be able to become root to install the script.  This is problematic for some DBAs who do not have root access, thus requiring a SysAdmin to do the work for them.
@@ -19,6 +19,7 @@ Advantages of the plugin method:
 * No need for knowledge of xinetd or services.
 * No need to configure access or store login informaiton in a text file.  The plugin runs internal to the MySQL daemon.
 * Plugin uses system calls and variables instead of performing SQL queries.
+* Ability to enter maintenance mode via a simple SQL command.
 
 In all fairness, performance impact needs to be further tested.
 
@@ -119,6 +120,18 @@ The plugin introduces some new Status Variables to MySQL for controlling behavio
 It will also read the status variable "read_only" to determine whether the node is in Read Only mode.  You can control the behavior of whether or not the system should tell the proxy if the node is available to take traffic or not by setting the variable, "clustercheck_available_if_readonly".  It can be set with the following:
 
     SET GLOBAL clustercheck_available_if_readonly=1;
+
+You can also set availability if the node is in donor mode:
+
+    SET GLOBAL clustercheck_available_if_donor=1;
+
+### Maintenance Mode
+
+The plugin allows you to set the node unavailable for receiving traffic by setting the clustercheck_enabled status variable via a SET GLOBAL command;
+
+    SET GLOBAL clustercheck_enabled=1;
+
+This allows for putting a node in maintenance mode manually.  This could be useful for performing upgrades, running backups, etc.  With the ability to do this via a SQL command, it is very easy to do.
     
 ### Testing the Plugin
 
