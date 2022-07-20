@@ -18,16 +18,14 @@
 #include <typelib.h>
 #include <mysql_com.h>
 
-#include <sql/wsrep_mysqld.h>
-
 // Variables from the daemon
+#include <sql/wsrep_mysqld.h>
 extern bool read_only;
 extern const char *wsrep_cluster_status;
 
-// Local variables
-long enabled = 1;
-long available_if_donor = 0;
-long available_if_readonly = 0;
+long enabled;
+long available_if_donor;
+long available_if_readonly;
 static MYSQL_SYSVAR_LONG(available_if_readonly, available_if_readonly, 0, "Availability of node if it is readonly", NULL, NULL, 1, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(available_if_donor, available_if_donor, 0, "Availability of node if it is a donor", NULL, NULL, 0, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(enabled, enabled, 0, "Whether cluster check is enabled", NULL, NULL, 1, 0, 1, 0);
@@ -51,7 +49,7 @@ void *listener(void *) {
   while(1) {
     connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 
-    if (enabled == 1) { // check is enabled
+      if (enabled == 1) { // check is enabled
       if ((strcmp(wsrep_cluster_status, "Primary") == 0) && (wsrep_node_is_synced() || (wsrep_node_is_donor() && available_if_donor == 1))) {
         if (available_if_readonly == 0) {
           if (read_only) {  // in read-only state
