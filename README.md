@@ -1,6 +1,19 @@
 # clustercheck
 This plugin is designed to mimic the function of the Percona clustercheck script for PXC. This plugin is still in development and not completed.
 
+### Why the need for a clustercheck plugin?
+In order to use a load balancer with PXC, such as HAProxy, you want to be able to query the server easily to see if the node is available to respond to traffic.  Most of the time this requires configuring a script, usually written in Bash or Python, to login to MySQL and check a few status variables and then respond with a HTTP header, status code, and text.  The load balancer then reads this response and uses it to determine whether to route queries to the node or not.
+
+While this approach works fine, it does offer a few disadvantages:
+* Must be able to become root to install the script.  This is problematic for some DBAs who do not have root access, thus requiring a SysAdmin to do the work for them.
+* Must be knowledgeable of xinetd in Linux and know how to setup the service.
+* Username and password for the connection are stored unencrypted in plain text format in the script, jeopardizing security.
+* The script must execute a query every time it is called, which can impact performance.
+
+The plugin method resolves all of the above issues.  Plugins are easy to install and enable.  No additional permissions are required beyond those needed to manage MySQL.
+
+In all fairness, performance impact needs to be further tested but I remain optimistic it is minimal.
+
 ### Development Server Setup
 
 The following was used to setup a t2.medium instance running Amazon Linux on an AWS EC2 instance for development and compilation of the plugin:
@@ -116,6 +129,8 @@ The plugin will listen to port 9200 and will send back a header code and status 
     Connection closed by foreign host.
     
 ### Future Enhancements
+There are a few things I would like to do to make the plugin more useful if there is interest in doing so.
+
 * Add a test to ensure the Galera plugin is enabled
 * Make the port upon which it listens configurable
 * Make sure that the global variables are available to set via the MySQL config file
