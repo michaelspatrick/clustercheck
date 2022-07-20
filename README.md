@@ -83,7 +83,7 @@ The following was used to setup a t2.medium instance running Amazon Linux on an 
     
     # Connect to MySQL and reset password
     /usr/local/mysql/bin/mysql -uroot -p -h127.0.0.1
-    mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY '##MySQL123##';
+    mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'PASSWORD';
     mysql> FLUSH PRIVILEGES;
 
 ### Compile the Plugin
