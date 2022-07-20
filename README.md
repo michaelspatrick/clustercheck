@@ -1,6 +1,9 @@
 # clustercheck
 This plugin is designed to mimic the function of the Percona clustercheck script for PXC. This plugin is still in development and not completed.
 
+### How does it work?
+The MySQL server daemon plugin initiates a listener on port 9200 which awaits a connection.  Once one is made, the node's availability is checked with the same logic as is used in scripts commonly used.  Instead of querying the database, however, the plugin utilizes internal system calls to verify availability.  An HTTP header, status code, and message are then output and the connection is closed. This mimics the functionality of the scripts currently used for this purpose.
+
 ### Why the need for a clustercheck plugin?
 In order to use a load balancer with PXC, such as HAProxy, you want to be able to query the server easily to see if the node is available to respond to traffic.  Most of the time this requires configuring a script, usually written in Bash or Python, to login to MySQL and check a few status variables and then respond with a HTTP header, status code, and text.  The load balancer then reads this response and uses it to determine whether to route queries to the node or not.
 
@@ -10,9 +13,14 @@ While this approach works fine, it does offer a few disadvantages:
 * Username and password for the connection are stored unencrypted in plain text format in the script, jeopardizing security.
 * The script must execute a query every time it is called, which can impact performance.
 
-The plugin method resolves all of the above issues.  Plugins are easy to install and enable.  No additional permissions are required beyond those needed to manage MySQL.
+Advantages of the plugin method:
+* Easy to install and configure.
+* No need for root privileges to configure.
+* No need for knowledge of xinetd or services.
+* No need to configure access or store login informaiton in a text file.  The plugin runs internal to the MySQL daemon.
+* Plugin uses system calls and variables instead of performing SQL queries.
 
-In all fairness, performance impact needs to be further tested but I remain optimistic it is minimal.
+In all fairness, performance impact needs to be further tested.
 
 ### Development Server Setup
 
