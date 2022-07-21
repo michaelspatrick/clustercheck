@@ -106,14 +106,14 @@ You will want to have the source code compiled for PXC and have the MySQL daemon
 ### Plugin Status Variables
 
 The plugin introduces some new Status Variables to MySQL for controlling behavior:
-
+   
     mysql> SHOW GLOBAL VARIABLES LIKE "cluster%";
     +------------------------------------+-------+
     | Variable_name                      | Value |
     +------------------------------------+-------+
-    | clustercheck_available_if_donor    | 1     |
-    | clustercheck_available_if_readonly | 0     |
-    | clustercheck_enabled               | 1     |
+    | clustercheck_available_if_donor    | 0     |
+    | clustercheck_available_if_readonly | 1     |
+    | clustercheck_maintenance_mode      | 0     |
     +------------------------------------+-------+
     3 rows in set (0.00 sec)
     
@@ -125,11 +125,21 @@ You can also set availability if the node is in donor mode:
 
     SET GLOBAL clustercheck_available_if_donor=1;
 
+If you want to see how many connections have been serviced, you can query global status such as:
+
+    mysql> SHOW GLOBAL STATUS LIKE "cluster%";
+    +--------------------------+-------+
+    | Variable_name            | Value |
+    +--------------------------+-------+
+    | clustercheck_connections | 4     |
+    +--------------------------+-------+
+    1 row in set (0.00 sec)
+
 ### Maintenance Mode
 
-The plugin allows you to set the node unavailable for receiving traffic by setting the clustercheck_enabled status variable via a SET GLOBAL command;
+The plugin allows you to set the node unavailable for receiving traffic by setting the clustercheck_maintenance_mode variable via a SET GLOBAL command;
 
-    SET GLOBAL clustercheck_enabled=1;
+    SET GLOBAL clustercheck_maintenance_mode=1;
 
 This allows for putting a node in maintenance mode manually.  This could be useful for performing upgrades, running backups, etc.  With the ability to do this via a SQL command, it is very easy to do.
     
@@ -154,5 +164,5 @@ There are a few things I would like to do to make the plugin more useful if ther
 
 * Add a test to ensure the Galera plugin is enabled
 * Make the port upon which it listens configurable
-* Make sure that the global variables are available to set via the MySQL config file
+* Make sure that the global variables are available to set via the my.cnf file and/or persist a restart
 * Plan to do a version in the near future for Group Replication
