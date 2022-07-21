@@ -164,7 +164,7 @@ The plugin will listen to port 9200 and will send back a header code and status 
 
 I have also tested it with multiple connections with no refused connections as of yet.  In this test I did 100,000 connections:
 
-    for i in {1..100000}; do echo $i; telnet localhost 9200 | grep 503 & done
+    for i in {1..100000}; do echo $i; telnet localhost 9200 & done
 
 This was done with a tcp backlog of 4096 which was the value of /proc/sys/net/core/somaxconn.  Below check of the status variable shows no dropped connections:
 
