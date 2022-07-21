@@ -23,19 +23,31 @@
 extern bool read_only;
 extern const char *wsrep_cluster_status;
 
-long enabled;
+// System status
+long connections=0;
+static SHOW_VAR status_variables[] = {
+    {"clustercheck_connections", (char *)&connections, SHOW_LONGLONG, SHOW_SCOPE_GLOBAL},
+    {NullS, NullS, SHOW_LONG, SHOW_SCOPE_GLOBAL}
+    };
+
+// System variables
+long maintenance_mode;
 long available_if_donor;
 long available_if_readonly;
+long port=9200;
 static MYSQL_SYSVAR_LONG(available_if_readonly, available_if_readonly, 0, "Availability of node if it is readonly", NULL, NULL, 1, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(available_if_donor, available_if_donor, 0, "Availability of node if it is a donor", NULL, NULL, 0, 0, 1, 0);
-static MYSQL_SYSVAR_LONG(enabled, enabled, 0, "Whether cluster check is enabled", NULL, NULL, 1, 0, 1, 0);
-static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(enabled), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), nullptr};
+static MYSQL_SYSVAR_LONG(maintenance_mode, maintenance_mode, 0, "Whether node is in maintenance more or not", NULL, NULL, 0, 0, 1, 0);
+//static MYSQL_SYSVAR_LONG(port, port, 0, "Which port to listen on", NULL, NULL, 9200, 1024, 49151, 0);
+//static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(maintenance_mode), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), MYSQL_SYSVAR(port), nullptr};
+static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(maintenance_mode), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), nullptr};
 
 void *listener(void *) {
+  pid_t pid;
   int listenfd = 0, connfd = 0;
   struct sockaddr_in serv_addr;
-  int listen_port = 9200;
-  int max_connections_to_queue = 10;
+  //int listen_port = 9200;
+  int max_connections_to_queue = 100;
   char sendBuff[1025];
 
   listenfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -43,59 +55,72 @@ void *listener(void *) {
   memset(sendBuff, '0', sizeof(sendBuff));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  serv_addr.sin_port = htons(listen_port);
+  serv_addr.sin_port = htons(port);
   bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
   listen(listenfd, max_connections_to_queue);
+
   while(1) {
     connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 
-      if (enabled == 1) { // check is enabled
-      if ((strcmp(wsrep_cluster_status, "Primary") == 0) && (wsrep_node_is_synced() || (wsrep_node_is_donor() && available_if_donor == 1))) {
-        if (available_if_readonly == 0) {
-          if (read_only) {  // in read-only state
-            strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
-            strcat(sendBuff, "Content-Type: text/plain\r\n");
-            strcat(sendBuff, "Connection: close\r\n");
-            strcat(sendBuff, "Content-Length: 43\r\n");
-            strcat(sendBuff, "\r\n");
-            strcat(sendBuff, "Percona XtraDB Cluster Node is read-only.\r\n");
-            [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
-            close(connfd);
-          }
-        }
+    if ((pid=fork()) == 0) {
+      close(listenfd);
 
-        // must be a success if we made it here
-        strcpy(sendBuff, "HTTP/1.1 200 OK\r\n");
-        strcat(sendBuff, "Content-Type: text/plain\r\n");
-        strcat(sendBuff, "Connection: close\r\n");
-        strcat(sendBuff, "Content-Length: 40\r\n");
-        strcat(sendBuff, "\r\n");
-        strcat(sendBuff, "Percona XtraDB Cluster Node is synced.\r\n");
-        [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
-        close(connfd);
-      } else {  // node is non-primary or not synced
+      if (maintenance_mode == 0) {
+        if ((strcmp(wsrep_cluster_status, "Primary") == 0) && (wsrep_node_is_synced() || (wsrep_node_is_donor() && available_if_donor == 1))) {
+          if (available_if_readonly == 0) {
+            if (read_only) {  // in read-only state
+              strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
+              strcat(sendBuff, "Content-Type: text/plain\r\n");
+              strcat(sendBuff, "Connection: close\r\n");
+              strcat(sendBuff, "Content-Length: 43\r\n");
+              strcat(sendBuff, "\r\n");
+              strcat(sendBuff, "Percona XtraDB Cluster Node is read-only.\r\n");
+              [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
+              close(connfd);
+              connections++;
+            }
+          }
+
+          // must be a success if we made it here
+          strcpy(sendBuff, "HTTP/1.1 200 OK\r\n");
+          strcat(sendBuff, "Content-Type: text/plain\r\n");
+          strcat(sendBuff, "Connection: close\r\n");
+          strcat(sendBuff, "Content-Length: 40\r\n");
+          strcat(sendBuff, "\r\n");
+          strcat(sendBuff, "Percona XtraDB Cluster Node is synced.\r\n");
+          [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
+          close(connfd);
+          connections++;
+        } else {  // node is non-primary or not synced
+          strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
+          strcat(sendBuff, "Content-Type: text/plain\r\n");
+          strcat(sendBuff, "Connection: close\r\n");
+          strcat(sendBuff, "Content-Length: 57\r\n");
+          strcat(sendBuff, "\r\n");
+          strcat(sendBuff, "Percona XtraDB Cluster Node is not synced or non-PRIM.\r\n");
+          [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
+          close(connfd);
+          connections++;
+        }
+      } else {
+        // node is in maintenance mode
         strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
         strcat(sendBuff, "Content-Type: text/plain\r\n");
         strcat(sendBuff, "Connection: close\r\n");
-        strcat(sendBuff, "Content-Length: 57\r\n");
+        strcat(sendBuff, "Content-Length: 51\r\n");
         strcat(sendBuff, "\r\n");
-        strcat(sendBuff, "Percona XtraDB Cluster Node is not synced or non-PRIM.\r\n");
+        strcat(sendBuff, "Percona XtraDB Cluster Node is manually disabled.\r\n");
         [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
         close(connfd);
+        connections++;
       }
-    } else {
-      // check is disabled
-      strcpy(sendBuff, "HTTP/1.1 503 Service Unavailable\r\n");
-      strcat(sendBuff, "Content-Type: text/plain\r\n");
-      strcat(sendBuff, "Connection: close\r\n");
-      strcat(sendBuff, "Content-Length: 51\r\n");
-      strcat(sendBuff, "\r\n");
-      strcat(sendBuff, "Percona XtraDB Cluster Node is manually disabled.\r\n");
-      [&]{ return write(connfd, sendBuff, strlen(sendBuff)); }();
+
       close(connfd);
+      exit(0);
+      //sleep(1);
     }
+
     close(connfd);
-    sleep(1);
   }
 }
 
@@ -122,7 +147,7 @@ mysql_declare_plugin(clustercheck_daemon) {
   nullptr,
   clustercheck_daemon_plugin_deinit, /* Plugin Deinit */
   0x0100,
-  NULL,
+  status_variables,
   system_variables, /* clustercheck_system_variables, */
   NULL,
   0
