@@ -43,7 +43,7 @@ static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(maintenance_mode), MYSQL_SYSV
 void *listener(void *) {
   int listenfd = 0, connfd = 0;
   struct sockaddr_in serv_addr;
-  int max_connections_to_queue = 100;
+  int max_connections_to_queue = 4096;
   char sendBuff[1025];
 
   listenfd = socket(AF_INET, SOCK_STREAM, 0);
