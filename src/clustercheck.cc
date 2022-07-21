@@ -25,8 +25,10 @@ extern const char *wsrep_cluster_status;
 
 // System status
 long clustercheck_connections=0;
+long clustercheck_refused_connections=0;
 static SHOW_VAR status_variables[] = {
     {"clustercheck_connections", (char *)&clustercheck_connections, SHOW_LONGLONG, SHOW_SCOPE_GLOBAL},
+    {"clustercheck_refused_connections", (char *)&clustercheck_refused_connections, SHOW_LONGLONG, SHOW_SCOPE_GLOBAL},
     {NullS, NullS, SHOW_LONG, SHOW_SCOPE_GLOBAL}
     };
 
@@ -38,6 +40,8 @@ long port=9200;
 static MYSQL_SYSVAR_LONG(available_if_readonly, available_if_readonly, 0, "Availability of node if it is readonly", NULL, NULL, 1, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(available_if_donor, available_if_donor, 0, "Availability of node if it is a donor", NULL, NULL, 0, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(maintenance_mode, maintenance_mode, 0, "Whether node is in maintenance more or not", NULL, NULL, 0, 0, 1, 0);
+//static MYSQL_SYSVAR_LONG(port, port, 0, "Which port to listen on", NULL, NULL, 9200, 1024, 49151, 0);
+//static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(maintenance_mode), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), MYSQL_SYSVAR(port), nullptr};
 static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(maintenance_mode), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), nullptr};
 
 void *listener(void *) {
@@ -57,6 +61,7 @@ void *listener(void *) {
 
   while(1) {
     connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
+    if (connfd < 0) clustercheck_refused_connections++;
 
     if (maintenance_mode == 0) {
       if ((strcmp(wsrep_cluster_status, "Primary") == 0) && (wsrep_node_is_synced() || (wsrep_node_is_donor() && available_if_donor == 1))) {
