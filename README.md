@@ -127,15 +127,16 @@ You can also set availability if the node is in donor mode:
 
     SET GLOBAL clustercheck_available_if_donor=1;
 
-If you want to see how many connections have been serviced, you can query global status such as:
+If you want to see how many connections have been serviced, as well as how many dropped connections, you can query global status such as:
 
     mysql> SHOW GLOBAL STATUS LIKE "cluster%";
-    +--------------------------+-------+
-    | Variable_name            | Value |
-    +--------------------------+-------+
-    | clustercheck_connections | 4     |
-    +--------------------------+-------+
-    1 row in set (0.00 sec)
+    +----------------------------------+--------+
+    | Variable_name                    | Value  |
+    +----------------------------------+--------+
+    | clustercheck_connections         | 141003 |
+    | clustercheck_refused_connections | 0      |
+    +----------------------------------+--------+
+    2 rows in set (0.00 sec)
 
 ### Maintenance Mode
 
@@ -160,7 +161,22 @@ The plugin will listen to port 9200 and will send back a header code and status 
     
     Percona XtraDB Cluster Node is synced.
     Connection closed by foreign host.
-    
+
+I have also tested it with multiple connections with no refused connections as of yet.  In this test I did 100,000 connections:
+    for i in {1..100000}; do echo $i; telnet localhost 9200 | grep 503 & done
+
+This was done with a tcp backlog of 4096 which was the value of /proc/sys/net/core/somaxconn.  Below check of the status variable shows no dropped connections:
+
+    mysql> SHOW GLOBAL STATUS LIKE "cluster%";
+    +----------------------------------+--------+
+    | Variable_name                    | Value  |
+    +----------------------------------+--------+
+    | clustercheck_connections         | 141003 |
+    | clustercheck_refused_connections | 0      |
+    +----------------------------------+--------+
+    2 rows in set (0.00 sec)
+
+
 ### Future Enhancements
 There are a few things I would like to do to make the plugin more useful if there is interest in doing so.
 
