@@ -7,6 +7,8 @@ The MySQL server daemon plugin initiates a listener on port 9200 which awaits a 
 ### Why the need for a clustercheck plugin?
 In order to use a load balancer with PXC, such as HAProxy, you want to be able to query the server easily to see if the node is available to respond to traffic.  Most of the time this requires configuring a script, usually written in Bash or Python, to login to MySQL and check a few status variables and then respond with a HTTP header, status code, and text.  The load balancer then reads this response and uses it to determine whether to route queries to the node or not.  There is also a maintenance mode capability that is simple to enable.
 
+Above all, the goal of this plugin is to provide a simple way to interface with a load balancer.  Not everyone needs a complex system with lots of configurable options.  Those systems are great but require more knowledge from the user to configure it properly.  This is as simple as enable it and it just works.
+
 While this approach works fine, it does offer a few disadvantages:
 * Must be able to become root to install the script.  This is problematic for some DBAs who do not have root access, thus requiring a SysAdmin to do the work for them.
 * Must be knowledgeable of xinetd in Linux and know how to setup the service.
@@ -14,7 +16,7 @@ While this approach works fine, it does offer a few disadvantages:
 * The script must execute a query every time it is called, which can impact performance.
 
 Advantages of the plugin method:
-* Easy to install and configure.
+* Easy and simple to install and configure.
 * No need for root privileges to configure.
 * No need for knowledge of xinetd or services.
 * No need to configure access or store login information in a text file.  The plugin runs internal to the MySQL daemon.
