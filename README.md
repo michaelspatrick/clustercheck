@@ -122,10 +122,18 @@ The plugin introduces some new Status Variables to MySQL for controlling behavio
 It will also read the status variable "read_only" to determine whether the node is in Read Only mode.  You can control the behavior of whether or not the system should tell the proxy if the node is available to take traffic or not by setting the variable, "clustercheck_available_if_readonly".  It can be set with the following:
 
     SET GLOBAL clustercheck_available_if_readonly=1;
+    
+If you want to make the values more permanent and make them persist a restart:
+
+    SET PERSIST clustercheck_available_if_readonly=1;
 
 You can also set availability if the node is in donor mode:
 
     SET GLOBAL clustercheck_available_if_donor=1;
+
+Likewise, you can make the values persist a restart with:
+
+    SET PERSIST clustercheck_available_if_donor=1;
 
 If you want to see how many connections have been serviced, as well as how many dropped connections, you can query global status such as:
 
@@ -143,6 +151,10 @@ If you want to see how many connections have been serviced, as well as how many 
 The plugin allows you to set the node unavailable for receiving traffic by setting the clustercheck_maintenance_mode variable via a SET GLOBAL command;
 
     SET GLOBAL clustercheck_maintenance_mode=1;
+
+If you want to keep the node in maintenance mode even after a restart, you can make the change persist with the following:
+
+    SET PERSIST clustercheck_maintenance_mode=1;
 
 This allows for putting a node in maintenance mode manually.  This could be useful for performing upgrades, running backups, etc.  With the ability to do this via a SQL command, it is very easy to do.
     
