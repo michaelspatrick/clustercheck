@@ -1,5 +1,5 @@
 # clustercheck
-This MySQL plugin is designed to mimic the function of the Percona clustercheck script for PXC. This plugin is still in development and is currently a POC.  Do not use in a Production environment until it has been further tested.
+This MySQL plugin is designed to mimic the function of the Percona clustercheck script for PXC. This plugin is still being tested and should not be considered Production-worthy without extensive testing.
 
 ### How does it work?
 The MySQL server daemon plugin initiates a listener on port 9200 which awaits a connection.  Once one is made, the node's availability is checked with the same logic as is used in scripts commonly used.  Instead of querying the database, however, the plugin utilizes internal system calls to verify availability.  An HTTP header, status code, and message are then output and the connection is closed. This mimics the functionality of the scripts currently used for this purpose.
