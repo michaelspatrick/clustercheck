@@ -37,12 +37,12 @@ long maintenance_mode;
 long available_if_donor;
 long available_if_readonly;
 long port=9200;
+long old_port=0;
 static MYSQL_SYSVAR_LONG(available_if_readonly, available_if_readonly, 0, "Availability of node if it is readonly", NULL, NULL, 1, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(available_if_donor, available_if_donor, 0, "Availability of node if it is a donor", NULL, NULL, 0, 0, 1, 0);
 static MYSQL_SYSVAR_LONG(maintenance_mode, maintenance_mode, 0, "Whether node is in maintenance more or not", NULL, NULL, 0, 0, 1, 0);
-//static MYSQL_SYSVAR_LONG(port, port, 0, "Which port to listen on", NULL, NULL, 9200, 1024, 49151, 0);
-//static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(maintenance_mode), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), MYSQL_SYSVAR(port), nullptr};
-static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(maintenance_mode), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), nullptr};
+static MYSQL_SYSVAR_LONG(port, port, 0, "Which port to listen on", NULL, NULL, 9200, 1024, 65535, 0);
+static SYS_VAR *system_variables[] = {MYSQL_SYSVAR(maintenance_mode), MYSQL_SYSVAR(available_if_donor), MYSQL_SYSVAR(available_if_readonly), MYSQL_SYSVAR(port), nullptr};
 
 void *listener(void *) {
   int listenfd = 0, connfd = 0;
@@ -50,16 +50,21 @@ void *listener(void *) {
   int max_connections_to_queue = 4096;
   char sendBuff[1025];
 
-  listenfd = socket(AF_INET, SOCK_STREAM, 0);
-  memset(&serv_addr, '0', sizeof(serv_addr));
-  memset(sendBuff, '0', sizeof(sendBuff));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  serv_addr.sin_port = htons(port);
-  bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-  listen(listenfd, max_connections_to_queue);
-
   while(1) {
+    if (old_port != port) {
+      if (connfd != 0) close(connfd);
+      if (listenfd != 0) close(listenfd);
+      listenfd = socket(AF_INET, SOCK_STREAM, 0);
+      memset(&serv_addr, '0', sizeof(serv_addr));
+      memset(sendBuff, '0', sizeof(sendBuff));
+      serv_addr.sin_family = AF_INET;
+      serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+      serv_addr.sin_port = htons(port);
+      bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+      listen(listenfd, max_connections_to_queue);
+      old_port = port;
+    }
+
     connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
     if (connfd < 0) clustercheck_refused_connections++;
 
