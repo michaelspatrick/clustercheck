@@ -204,8 +204,4 @@ This was done with a tcp backlog of 4096 which was the value of /proc/sys/net/co
 
 
 ### Future Enhancements
-There are a few things I would like to do to make the plugin more useful if there is interest in doing so.
-
-* Add a test to ensure the Galera plugin is enabled
-* Make the port upon which it listens configurable
-* Plan to do a version in the near future for Group Replication
+My next plan is to make a version for Group Replication.
