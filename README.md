@@ -105,7 +105,7 @@ You will want to have the source code compiled for PXC and have the MySQL daemon
 ### Uninstall the Plugin
     mysql> UNINSTALL PLUGIN clustercheck;
     
-### Plugin Status Variables
+### Plugin Global Variables
 
 The plugin introduces some new Status Variables to MySQL for controlling behavior:
    
@@ -116,8 +116,9 @@ The plugin introduces some new Status Variables to MySQL for controlling behavio
     | clustercheck_available_if_donor    | 0     |
     | clustercheck_available_if_readonly | 1     |
     | clustercheck_maintenance_mode      | 0     |
+    | clustercheck_port                  | 9200  |
     +------------------------------------+-------+
-    3 rows in set (0.00 sec)
+    4 rows in set (0.00 sec)
     
 It will also read the status variable "read_only" to determine whether the node is in Read Only mode.  You can control the behavior of whether or not the system should tell the proxy if the node is available to take traffic or not by setting the variable, "clustercheck_available_if_readonly".  It can be set with the following:
 
@@ -134,6 +135,18 @@ You can also set availability if the node is in donor mode:
 Likewise, you can make the values persist a restart with:
 
     SET PERSIST clustercheck_available_if_donor=1;
+
+If you want to change ports on which it is listening, you can do so.  There is one caveat, however.  The plugin will still be listening on the port for one more connection before it is able to switch ports.  I am not sure if there is an easy way around this, but it is one minor detail to keep in mind when you make a change.  A simple "telnet localhost <oldport>" is enough to close the open socket and re-open with the new port number.
+
+As before, you can make the change to port 8080 (as an example) temporary with the following:
+
+    SET GLOBAL clustercheck_port=8080;
+
+Or, you can make the change persist a restart with:
+
+    SET PERSIST clustercheck_port=8080;
+
+### Plugin Status Variables
 
 If you want to see how many connections have been serviced, as well as how many dropped connections, you can query global status such as:
 
